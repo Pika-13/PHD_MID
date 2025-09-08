@@ -35,3 +35,6 @@ plot_patients_across_years <- ggplot(extracted_24_RCT, aes(x = publication_year,
 #save plot
 ggsave("plots/plot_patients_across_years.png", plot = plot_patients_across_years, width = 8, height=5, dpi = 1200)
 
+nrow(extracted_24_RCT%>% filter(primary_outcome_significant==1))
+nrow(extracted_24_RCT%>% filter(primary_outcome_significant==1 & between_group_difference_of_cci_12==1))
+
