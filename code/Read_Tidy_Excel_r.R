@@ -26,7 +26,6 @@ extracted_RCT <- janitor::clean_names(
     web_url = as.character(web_url),
     doi = as.character(doi),
     trial_nr= as.character(trial_nr), 
-    protocol= factor(protocol, levels = c("na", "0", "1"), labels = c("Unknown","Not a protocol", "Protocol")),
     protocol_published_original_column = factor(case_when(
       protocol=="Protocol" &
         results_of_the_protocol_already_published =="1" & 
@@ -40,11 +39,8 @@ extracted_RCT <- janitor::clean_names(
       levels = c("Study published, listed", 
                  "Study published, not listed", 
                  "Study not published yet")),
-    study_type = factor(case_when(
-      pilot_feasibility == "0" & type_of_study == "0" ~ "Superiority study",
-      pilot_feasibility == "0" & type_of_study == "1" ~ "Non-inferiority study",
-      pilot_feasibility == "1" ~ "Pilot/ Safety study"), 
-      levels = c("Superiority study", "Non-inferiority study", "Pilot/ Safety study")),
+    study_type = factor(pilot_feasibility, levels = c("0","1"),
+                        labels = c("Not pilot study", "Pilot/ Safety study")), 
     type_of_study_mentioned = factor(type_of_study_mentioned,
                                  levels = c("0", "1"),
                                  labels = c("No", "Yes")),
@@ -90,10 +86,10 @@ extracted_RCT <- janitor::clean_names(
                     levels = c("CCI primary endpoint", "CCI secondary endpoint",
                                "CCI both primary and secondary endpoint",
                                "CCI exploratory endpoint")),
-    #  cci_modification = factor(cci_modification,
-    #                      levels = c("0", "1"),
-    #                      labels = c("No", "Yes")),
-    # specification_of_modification = as.character(specification_of_modification),
+      cci_modification = factor(cci_modification,
+                          levels = c("0", "1"),
+                          labels = c("No", "Yes")),
+     specification_of_modification = as.character(specification_of_modification),
     primary_outcome_significant = factor(primary_outcome_significant,
                                          levels = c("0", "1"),
                                          labels = c("No", "Yes")),
@@ -133,8 +129,8 @@ extracted_RCT <- janitor::clean_names(
     comments = as.character(comments),
     doi_protocol = as.character(doi_protocol),
     protocol_published = factor(protocol_published,
-                                levels = c("0", "1", "2"),
-                                labels = c("Neither published nor registered", "Published", "Registered only")),
+                                levels = c("1","3", "2", "0"),
+                                labels = c("Protocol published", "Protocol unpublished", "No protocol,registry", "Neither protocol nor registry")),
     cci_1st_ep_in_protocol = factor(cci_1st_ep_in_protocol,
                                     levels = c("0", "1"),
                                     labels = c("No", "Yes")),
@@ -229,7 +225,7 @@ var_list_CCI_112 <- list(
   # protocol ~"Protocol", 
   # protocol_published ~"Protocol publication",
   #protocol_published_original_columnn~"Protocol publication status", 
-  study_type ~"Study type", 
+ type_of_study study_type ~"Study type", 
   #  study_superiority_non_inferiority ~"Study superiority/ non-inferiority",
   pooled_analysis ~"pooled_analysis",
   post_hoc_secondary_analysis ~"Post-hoc secondary analysis",
@@ -247,9 +243,12 @@ var_list_CCI_112 <- list(
   mean_or_median_used ~ "Mean or median used",
   cci_for_ss_used ~ "CCI used for sample size calculation",
   #if_cci_used_specification_of_ss_calculation ~"Details on sample size calculation with CCI",
-  study_must_be_excluded_e_g_protocol_whose_study_has_been_conducted ~ "Study exclusion"
+  study_must_be_excluded_e_g_protocol_whose_study_has_been_conducted, ~ "Study exclusion"
   #evaluation_unclear ~"evaluation_unclear"
-)
+  study_superiority_non_inferiority = factor(type_of_study,
+                                            levels = c("0", "1"),
+                                            labels = c("Superiority", "Non-inferiority")),
+
 #table code
 Table_descriptive_112_RCT <- extracted_112_RCT %>% 
   select(cci_ep, paper_type,
@@ -293,3 +292,7 @@ Table_descriptive_112_RCT <- extracted_112_RCT %>%
 #Save Table_descriptive
 Table_descriptive_112_RCT_path<-paste(getwd(), "/Output/Table/Table_descriptive_112_RCT.docx", sep = "")
 Table_descriptive_112_RCT%>%as_flex_table()%>%flextable::save_as_docx(Table_descriptive_112_RCT, path = "tables/Table_descriptive_112_RCT.docx")
+
+#----------------------------------------------
+#specific tables
+
