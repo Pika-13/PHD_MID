@@ -12,20 +12,20 @@ lapply(c("tidyverse", "data.table","utils", "writexl", "readxl",
 # Assuming your dataset is called 
 #included_from_compared_RCT = 142
 #rows of protocol and publication (89)+ rows of protocols only (49) + publications only (4)
-included_from_compared_RCT <- read_csv("database/csv_files_R_coding/Data_included_from_compared_RCT_2025_10_10.csv") 
+included_from_compared_RCT <- read_csv("database/csv_files_R_coding/Data_included_from_compared_RCT_2025_10_12.csv") 
 #naming RCT_publications and 
 RCT_publications <- included_from_compared_RCT %>% 
   filter(protocol == "Not a protocol")
-write_csv(RCT_publications, "database/csv_files_R_coding/RCT_publications_2025_10_10.csv")
+write_csv(RCT_publications, "database/csv_files_R_coding/RCT_publications_2025_10_12.csv")
 
 RCT_protocols_without_publication <- included_from_compared_RCT %>% 
   filter(protocol == "Protocol")
-write_csv(RCT_protocols_without_publication, "database/csv_files_R_coding/RCT_protocols_without_publication_2025_10_10.csv")
+write_csv(RCT_protocols_without_publication, "database/csv_files_R_coding/RCT_protocols_without_publication_2025_10_12.csv")
 
 #Pivot table for studies with both protocol and publication
 RCT_matched_publications_protocols <- included_from_compared_RCT %>% 
   filter(protocol_published != "Neither protocol nor registry")
-write_csv(RCT_matched_publications_protocols, "database/csv_files_R_coding/RCT_matched_publications_protocols_2025_10_10.csv")
+write_csv(RCT_matched_publications_protocols, "database/csv_files_R_coding/RCT_matched_publications_protocols_2025_10_12.csv")
 
 #get database with only matched publication-protocol
 # Step 1: Identify protocol-specific columns (ending with _protocol)
@@ -52,7 +52,7 @@ long_RCT_matched_publications_protocols <- bind_rows(protocol_part, publication_
   relocate(protocol, .after = trial_nr) 
 
 #save database only 89-89 publications and protocols
-write_csv(long_RCT_matched_publications_protocols, "database/csv_files_R_coding/long_RCT_matched_publications_protocols_2025_10_10.csv") 
+write_csv(long_RCT_matched_publications_protocols, "database/csv_files_R_coding/long_RCT_matched_publications_protocols_2025_10_12.csv") 
 
 #ensure factors are factors
 #ensure factor variables are factors
@@ -126,12 +126,13 @@ long_RCT_matched_publications_protocols$statistically_significant_difference_for
 long_RCT_matched_publications_protocols$between_group_difference_of_cci_12 <- factor(long_RCT_matched_publications_protocols$between_group_difference_of_cci_12, 
                                                                 levels = c("Yes", "No"))
 long_RCT_matched_publications_protocols$mean_or_median_used <- factor(long_RCT_matched_publications_protocols$mean_or_median_used, 
-                                                 levels = c("Mean", "Median"))
+                                                 levels = c("Mean", "Median"), labels = c("Mean", "Median"))
 long_RCT_matched_publications_protocols$study_type_mentioned <- factor(long_RCT_matched_publications_protocols$study_type_mentioned, 
                                                   levels = c("Yes", "No"))
 long_RCT_matched_publications_protocols$type_of_study_sup_non_inf <- factor(long_RCT_matched_publications_protocols$type_of_study_sup_non_inf, 
-                                                       levels = c( "Superiority trial (explicited)",     "Superiority trial (assumed)", "Non-inferiority trial (explicited)", "Non-inferiority trial (assumed)",   
-                                                                  "Equivalence trial", "Not mentioned"))       
+                                                                            levels = c("Superiority trial", "Non-inferiority trial",
+                                                                                       "Equivalence trial", "Not mentioned"))
+
 long_RCT_matched_publications_protocols$ss_calculation <- factor(long_RCT_matched_publications_protocols$ss_calculation, 
                                             levels = c("Yes", "No"))
 long_RCT_matched_publications_protocols$cci_used_for_ss_calculation <- factor(long_RCT_matched_publications_protocols$cci_used_for_ss_calculation, 
@@ -147,10 +148,9 @@ long_RCT_matched_publications_protocols$conclusion_of_authors <- factor(
   levels =  c("Favorable to intervention","Neutral", "Not mentioned"," Unfavorable to intervention"))
 
 #save
-write_csv(long_RCT_matched_publications_protocols,"database/csv_files_R_coding/long_RCT_matched_publications_protocols_2025_10_10.csv")
-write_xlsx(long_RCT_matched_publications_protocols,"database/csv_files_R_coding/long_RCT_matched_publications_protocols_2025_10_10.xlsx")
+write_csv(long_RCT_matched_publications_protocols,"database/csv_files_R_coding/long_RCT_matched_publications_protocols_2025_10_12.csv")
+write_xlsx(long_RCT_matched_publications_protocols,"database/csv_files_R_coding/long_RCT_matched_publications_protocols_2025_10_12.xlsx")
 
-RCT_cci1ep <- NULL
 #combine protocols without publication (49)
 #and publications without protocol (4)
 #and pivoted protocols with publication (89*2=178)
@@ -163,9 +163,9 @@ long_231_RCT_protocols_and_or_trials <-
         RCT_publications %>% 
           filter(protocol_published =="Neither protocol nor registry" | is.na(protocol_published)) %>% 
           select(names(long_RCT_matched_publications_protocols)) )
-write_csv(long_231_RCT_protocols_and_or_trials, "database/csv_files_R_coding/long_231_RCT_protocols_and_or_trials_2025_10_10.csv")
+write_csv(long_231_RCT_protocols_and_or_trials, "database/csv_files_R_coding/long_231_RCT_protocols_and_or_trials_2025_10_12.csv")
 #RCT with cci as 1 ep
 RCT_cci_1_ep <- included_from_compared_RCT %>% filter(cci_1st_ep=="Yes" & protocol != "Protocol"&
                                                        cci_modification!="Yes")
-write_csv(RCT_cci_1_ep, "database/csv_files_R_coding/RCT_cci_1_ep_2025_10_10.csv")
-#write_xlsx(cci_1st_RCT, "database/csv_files_R_cod
+write_csv(RCT_cci_1_ep, "database/csv_files_R_coding/RCT_cci_1_ep_2025_10_12.csv")
+write_xlsx(RCT_cci_1_ep, "database/csv_files_R_coding/RCT_cci_1_ep_2025_10_12.xlsx")

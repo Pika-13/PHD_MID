@@ -10,25 +10,29 @@ lapply(c("tidyverse", "data.table","utils", "writexl", "readxl",
        character.only = TRUE)
 #---------------------
 #reading excel file, cleaning, tidying
-compared_RCT_2025_10_10 <- janitor::clean_names(
-  read_xlsx("database/Revised_Data_original_Joana_2025_10_09_compared.xlsx",col_names = TRUE)[-1, ]) %>% 
+compared_RCT <- janitor::clean_names(
+  read_xlsx("database/Revised_Data_original_Fariba_2025_10_13_complet_and_corrected.xlsx",col_names = TRUE)[-1, ]) %>% 
+  mutate(ss_calculation_protocol = case_when(
+    protocol_published %in% c("0", "na") ~ NA_character_,
+    is.na(protocol_published) ~ NA_character_,
+    protocol_published%in% c("1", "2", "3") & is.na(specification_of_ss_calculation) ~ "0",
+    protocol_published%in% c("1", "2", "3") & specification_of_ss_calculation == "nm" ~ "0",
+    protocol_published%in% c("1", "2", "3") & specification_of_ss_calculation == "na" ~ "0",
+    protocol_published%in% c("1", "2", "3") & 
+      !is.na(specification_of_ss_calculation) &
+      specification_of_ss_calculation != "nm" &
+      specification_of_ss_calculation != "na" ~ "1")) %>% 
+  mutate(ss_calculation_protocol = factor(ss_calculation_protocol,
+                                          levels = c("1","0"),  labels = c("Yes", "No"))) %>% 
   mutate(specification_of_ss_calculation_protocol = case_when(
     protocol_published %in% c("") ~ NA_character_,
     specification_of_ss_calculation == "na" ~ NA_character_,
-    specification_of_ss_calculation == "nm" ~ "Not mentioned",
+    specification_of_ss_calculation == "nm" ~ NA_character_,
     specification_of_ss_calculation != "na" & 
       !is.na(specification_of_ss_calculation) ~ as.character(specification_of_ss_calculation))) %>% 
   select(-specification_of_ss_calculation) %>%
-    mutate(ss_calculation_protocol = factor(case_when(
-    protocol_published %in% c("0", "na") ~ NA_character_,
-    is.na(protocol_published) ~ NA_character_,
-    protocol_published%in% c("1", "2", "3") & is.na(specification_of_ss_calculation_protocol) ~ "0",
-      protocol_published%in% c("1", "2", "3") & specification_of_ss_calculation_protocol == "nm" ~ "0",
-      protocol_published%in% c("1", "2", "3") & specification_of_ss_calculation_protocol == "na" ~ "0",
-      protocol_published%in% c("1", "2", "3") & 
-        (specification_of_ss_calculation_protocol != "nm" & specification_of_ss_calculation_protocol != "na") ~ "1"),
-      levels = c("1","0"),  labels = c("Yes", "No")),
-    specification_of_ss_calculation = case_when(
+    
+    mutate(specification_of_ss_calculation = case_when(
       protocol==1 ~ NA_character_,
       is.na(specification_of_ss_calculation_in_paper) ~ NA_character_,
       specification_of_ss_calculation_in_paper == "na" ~ NA_character_,
@@ -38,34 +42,36 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
   mutate(ss_calculation = case_when(
     protocol==1 ~ NA_character_,
     protocol==0 & is.na(specification_of_ss_calculation) ~ "0",
-      protocol==0 & specification_of_ss_calculation == "nm" ~ "0",
-    protocol==0 & specification_of_ss_calculation == "na" ~ "0",
+      protocol==0 & specification_of_ss_calculation %in% c( "nm", "na") ~ "0",
     specification_of_ss_calculation != "na" & 
         specification_of_ss_calculation != "nm" &
         !is.na(specification_of_ss_calculation) ~ "1")) %>%
   mutate(
     ss_calculation = factor(ss_calculation,levels = c("1","0"),  labels = c("Yes", "No"))    ,
-    definition_of_non_inf_margin = case_when(
-      protocol==1 ~ NA_character_,
-      definition_of_non_inf_margin == "na" ~ NA_character_,
-      definition_of_non_inf_margin == "nm" ~ NA_character_,
-      definition_of_non_inf_margin != "na" & 
-        definition_of_non_inf_margin != "nm"&
-        !is.na(definition_of_non_inf_margin) ~ as.character(definition_of_non_inf_margin)),
     non_inf_margin= case_when(
-      type_of_study == "1" & is.na(definition_of_non_inf_margin) ~ 0,
-      type_of_study== "1" & 
-        !is.na(definition_of_non_inf_margin) ~ 1)) %>% 
-  mutate(non_inf_margin = factor(non_inf_margin,
-                                     levels = c("0", "1"), labels = c("No", "Yes")),  
-     type_of_study_sup_non_inf = case_when(
+      type_of_study %in% c("0", "na", "nm") ~ NA_character_,
+      type_of_study == "1" & is.na(definition_of_non_inf_margin) ~ "0",
+      type_of_study == "1" & definition_of_non_inf_margin %in% c("na", "nm") ~ "0",
+      type_of_study == "1" & definition_of_non_inf_margin != "na" 
+      & definition_of_non_inf_margin!= "nm" 
+      & !is.na(definition_of_non_inf_margin) ~ "1")) %>% 
+  mutate(
+    non_inf_margin = factor(non_inf_margin,levels = c("1", "0"),labels = c( "Yes","No")),  
+    definition_of_non_inf_margin = case_when(
+      definition_of_non_inf_margin %in% c("na", "nm") ~ NA_character_,
+      is.na(definition_of_non_inf_margin) ~ NA_character_,
+      type_of_study=="1" & 
+      definition_of_non_inf_margin != "na" & 
+        definition_of_non_inf_margin != "nm" &
+        !is.na(definition_of_non_inf_margin) ~ as.character(definition_of_non_inf_margin))) %>% 
+  mutate(type_of_study_sup_non_inf = case_when(
       protocol==1 ~ NA_character_,
-      type_of_study == "na"~ NA_character_,  
-        is.na(type_of_study) ~ NA_character_,
-      type_of_study == "nm"  ~ "nm", 
-      type_of_study == "0"  ~ "0", 
-      type_of_study == "1"  ~ "1",
-      type_of_study == "3"  ~ "3")) %>% 
+      is.na(study_type_mentioned)~ NA_character_,
+      study_type_mentioned %in% c("nm", "na") ~ NA_character_,
+      study_type_mentioned ==0 ~"Not mentioned",
+      study_type_mentioned ==1 & type_of_study == "0"  ~ "0", 
+      study_type_mentioned ==1 & type_of_study == "1"  ~ "1",
+      study_type_mentioned ==1 & type_of_study == "3"  ~ "3")) %>% 
   mutate(
     type_of_study_sup_non_inf = factor(type_of_study_sup_non_inf,
                                        levels = c("0", "1", "3", "nm"),
@@ -73,33 +79,30 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
                                                   "Equivalence trial", "Not mentioned"))) %>% 
   select(-type_of_study) %>%
   mutate(
-    non_inf_margin= case_when(
-      protocol==1 ~ NA_character_,
-      type_of_study_sup_non_inf=="Non-inferiority trial" & definition_of_non_inf_margin =="nm" ~ "0",
-      type_of_study_sup_non_inf=="Non-inferiority trial" & is.na(definition_of_non_inf_margin) ~ "0",
-      type_of_study_sup_non_inf=="Non-inferiority trial" & definition_of_non_inf_margin != "nm" ~"1"))%>% 
-  mutate(
-      non_inf_margin = factor(non_inf_margin,
-      levels = c("0", "1"),
-      labels = c("No", "Yes")),
- definition_of_non_inf_margin_protocol = case_when(
-   protocol==1 ~ NA_character_,
-   definition_of_non_inf_margin_protocol == "na" ~ NA_character_,
-   definition_of_non_inf_margin_protocol == "nm" ~ NA_character_,
-   definition_of_non_inf_margin_protocol != "na" & 
-     definition_of_non_inf_margin_protocol != "nm"&
-     !is.na(definition_of_non_inf_margin_protocol) ~ as.character(definition_of_non_inf_margin_protocol)),
     non_inf_margin_protocol= case_when(
-      type_of_study_protocol == "1" & is.na(definition_of_non_inf_margin_protocol) ~ 0,
-      type_of_study_protocol=="1" & definition_of_non_inf_margin_protocol== "Not mentioned" ~ 0,
-      type_of_study_protocol== "1" & 
-        !is.na(definition_of_non_inf_margin_protocol) & 
-        definition_of_non_inf_margin_protocol!= "na" & 
-        definition_of_non_inf_margin_protocol != "Not mentioned" ~ 1)) %>% 
+      is.na(type_of_study_protocol)~ NA_character_,
+      type_of_study_protocol %in% c("0", "na", "nm") ~ NA_character_,
+    type_of_study_protocol == "1" & is.na(definition_of_non_inf_margin_protocol) ~ "0",
+    type_of_study_protocol == "1" & definition_of_non_inf_margin_protocol %in% c("na", "nm") ~ "0",
+    type_of_study_protocol == "1" & definition_of_non_inf_margin_protocol != "na" 
+    & definition_of_non_inf_margin_protocol!= "nm" 
+    & !is.na(definition_of_non_inf_margin_protocol) ~ "1")) %>% 
   mutate(
-    non_inf_margin_protocol = factor(non_inf_margin_protocol,
-      levels = c("0", "1"), labels = c("No", "Yes")),
-    article_id = as.character(article_id) ,
+    non_inf_margin_protocol = factor(non_inf_margin_protocol,levels = c("1", "0"),labels = c( "Yes","No")),  
+    definition_of_non_inf_margin_protocol = case_when(
+      protocol==1 ~ NA_character_,
+      protocol_published=="0" ~ NA_character_,
+      type_of_study_protocol %in% c("0", "na", "nm") ~ NA_character_,
+      type_of_study_protocol=="1" &  definition_of_non_inf_margin_protocol %in% c("na", "nm") ~ NA_character_,
+      type_of_study_protocol=="1" &  is.na(definition_of_non_inf_margin_protocol) ~ NA_character_,
+      type_of_study_protocol=="1" & 
+        definition_of_non_inf_margin_protocol != "na" & 
+        definition_of_non_inf_margin_protocol != "nm"&
+        !is.na(definition_of_non_inf_margin_protocol) ~ as.character(definition_of_non_inf_margin_protocol)),
+    
+  
+  
+  article_id = as.character(article_id) ,
     title =  as.character(title),
     publication_year = as.integer(publication_year)) %>% 
   #  mutate(vol_nr=as.character(vol_nr),                                                      
@@ -162,6 +165,7 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
   select(-exclusion_because_of) %>%
   mutate(
     sample_size = as.numeric(sample_size),
+    cci_mismatch_analysis = as.character(cci_mismatch_analysis),
     cci_1st_ep = case_when(
       protocol=="Protocol" ~ NA_character_,
       cci_1st_ep == 0 ~ "0",
@@ -190,6 +194,7 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
     cd_cci_reported_in_results = factor(cd_cci_reported_in_results,
                                         levels = c("0", "1", "nm"),
                                         labels = c("No", "Yes", "Not mentioned")),
+    publication_year_protocol = as.numeric(publication_year_protocol),
     cci_ep = case_when(
       protocol=="Protocol" ~ NA_character_,
       (cci_1st_ep %in% c("No", "nm")|is.na(cci_1st_ep)) & 
@@ -240,28 +245,29 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
                                  labels = c("Mean", "Median", "Not mentioned")),
     study_type_mentioned = case_when(
       protocol=="Protocol" ~ NA_character_,
-      study_type_mentioned == 0 ~ "0",
-      study_type_mentioned == 1 ~ "1"),
+      study_type_mentioned == "0" ~ "0",
+      study_type_mentioned == "1" ~ "1"),
     study_type_mentioned = factor(study_type_mentioned,
       levels = c("0", "1"),
       labels = c("No", "Yes")),
     type_of_study_sup_non_inf = case_when(
       protocol=="Protocol" ~ NA_character_,
       protocol== "Not a protocol" & is.na(type_of_study_sup_non_inf) ~"Not mentioned",
+      study_type_mentioned== "Yes" & type_of_study_sup_non_inf =="3"~"Equivalence trial",
       type_of_study_sup_non_inf == "na" ~"Not mentioned",
       type_of_study_sup_non_inf == "nm" ~"Not mentioned",
-      study_type_mentioned== "Yes" & type_of_study_sup_non_inf=="Non-inferiority trial"~"Non-inferiority trial (explicited)",
-      study_type_mentioned== "No" & type_of_study_sup_non_inf=="Non-inferiority trial"~"Non-inferiority trial (assumed)",
-      study_type_mentioned== "Yes" & type_of_study_sup_non_inf=="Superiority trial"~"Superiority trial (explicited)",
-      study_type_mentioned== "No" & type_of_study_sup_non_inf=="Superiority trial"~"Superiority trial (assumed)"),
+      study_type_mentioned== "Yes" & type_of_study_sup_non_inf=="Non-inferiority trial"~"Non-inferiority trial",
+      study_type_mentioned== "No" ~"Not mentioned",
+      study_type_mentioned== "Yes" & type_of_study_sup_non_inf=="Superiority trial"~"Superiority trial"
+      ),
     type_of_study_sup_non_inf = factor(type_of_study_sup_non_inf,
-      levels = c("Non-inferiority trial (explicited)", "Non-inferiority trial (assumed)",
-                 "Superiority trial (explicited)","Superiority trial (assumed)", "Not mentioned"),
-      labels = c("Non-inferiority trial (explicited)", "Non-inferiority trial (assumed)",
-                 "Superiority trial (explicited)","Superiority trial (assumed)", "Not mentioned")),
+                                       levels = c("Superiority trial","Non-inferiority trial", 
+                                                  "Equivalence trial", "Not mentioned"),
+                                       labels = c("Superiority trial","Non-inferiority trial", 
+                                                  "Equivalence trial", "Not mentioned")),
      cci_used_for_ss_calculation = case_when(
        protocol=="Protocol" ~ NA_character_,
-       ss_calculation == "No" ~ NA_character_,
+       ss_calculation == "No" ~ "0",
        cci_used_for_ss_calculation_in_paper == 0 ~ "0",
        cci_used_for_ss_calculation_in_paper == 1 ~ "1",
        TRUE ~NA_character_ ))%>% 
@@ -292,21 +298,19 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
                                           labels = c("No", "Yes")),
     type_of_study_sup_non_inf_protocol = case_when(
       protocol_published=="Neither protocol nor registry" ~ NA_character_,
-      type_of_study_protocol =="nm"~"Not mentioned",
-      study_type_mentioned_protocol== "Yes" & type_of_study_protocol =="3"~"Equivalence trial (explicited)",
-      study_type_mentioned_protocol== "No" & type_of_study_protocol=="3"~"Equivalence trial (assumed)",
-      study_type_mentioned_protocol== "Yes" & type_of_study_protocol =="1"~"Non-inferiority trial (explicited)",
-      study_type_mentioned_protocol== "No" & type_of_study_protocol=="1"~"Non-inferiority trial (assumed)",
-      study_type_mentioned_protocol== "Yes" & type_of_study_protocol=="0"~"Superiority trial (explicited)",
-      study_type_mentioned_protocol== "No" & type_of_study_protocol=="0"~"Superiority trial (assumed)")) %>% 
+      type_of_study_protocol == "na" ~"Not mentioned",
+      type_of_study_protocol == "nm" ~"Not mentioned",
+      is.na(study_type_mentioned_protocol)~"Not mentioned",
+      study_type_mentioned_protocol== "Yes" & type_of_study_protocol =="3"~"Equivalence trial",
+      study_type_mentioned_protocol== "Yes" & type_of_study_protocol =="1"~"Non-inferiority trial",
+      study_type_mentioned_protocol== "Yes" & type_of_study_protocol=="0"~"Superiority trial",
+      study_type_mentioned_protocol== "No" ~"Not mentioned")) %>% 
   mutate(
-    type_of_study_sup_non_inf_protocol = factor(type_of_study_sup_non_inf_protocol,
-      levels = c("Superiority trial (explicited)","Superiority trial (assumed)", 
-                 "Non-inferiority trial (explicited)", "Non-inferiority trial (assumed)",
-                 "Equivalence trial (explicited)", "Equivalence trial (assumed)", "Not mentioned"),
-      labels = c("Superiority trial (explicited)","Superiority trial (assumed)", 
-                 "Non-inferiority trial (explicited)", "Non-inferiority trial (assumed)",
-                 "Equivalence trial (explicited)", "Equivalence trial (assumed)", "Not mentioned")),
+    type_of_study_sup_non_inf_protocol = factor(type_of_study_sup_non_inf,
+                                                levels = c("Superiority trial","Non-inferiority trial", 
+                                                           "Equivalence trial", "Not mentioned"),
+                                                labels = c("Superiority trial","Non-inferiority trial", 
+                                                           "Equivalence trial", "Not mentioned")),
     cci_1st_ep_protocol = factor(cci_1st_ep_in_protocol,
                                     levels = c("0", "1", "nm"),
                                     labels = c("No", "Yes", "Not mentioned"))) %>% 
@@ -371,6 +375,7 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
          discipline, continent, sample_size,
          cci_ep,
          cci_1st_ep, cci_2nd_ep, cci_expl_ep, 
+         cci_mismatch_analysis,
          cd_cci_reported_in_results,
          cci_modification, specification_of_modification,
          primary_outcome_significant,
@@ -386,6 +391,7 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
          non_inf_margin,
          definition_of_non_inf_margin,
          protocol_published, doi_protocol,
+         publication_year_protocol,
          cci_ep_protocol,
          cci_1st_ep_protocol,cci_2nd_ep_protocol, cci_expl_ep_protocol,
          ss_calculation_protocol,
@@ -398,16 +404,16 @@ compared_RCT_2025_10_10 <- janitor::clean_names(
          comments, comments_2)
 
 #saving excel and csv
-write_xlsx(compared_RCT_2025_10_10, "database/csv_files_R_coding/Data_RCT_compared_RCT_2025_10_10.xlsx")
-write_csv(compared_RCT_2025_10_10, "database/csv_files_R_coding/Data_RCT_compared_RCT_2025_10_10.csv")
+write_xlsx(compared_RCT, "database/csv_files_R_coding/Data_RCT_compared_RCT.xlsx")
+write_csv(compared_RCT, "database/csv_files_R_coding/Data_RCT_compared_RCT.csv")
 
 
 #Inclusion of publication, exclusion of protocols and pilots 
-included_from_compared_RCT <- compared_RCT_2025_10_10 %>% 
+included_from_compared_RCT <- compared_RCT %>% 
   filter(study_must_be_excluded!="Yes")
 #saving excel and csv
-write_csv(included_from_compared_RCT, "database/csv_files_R_coding/Data_included_from_compared_RCT_2025_10_10.csv")
-write_xlsx(included_from_compared_RCT, "database/csv_files_R_coding/Data_included_from_compared_RCT_2025_10_10.xlsx")
+write_csv(included_from_compared_RCT, "database/csv_files_R_coding/Data_included_from_compared_RCT_2025_10_12.csv")
+write_xlsx(included_from_compared_RCT, "database/csv_files_R_coding/Data_included_from_compared_RCT_2025_10_12.xlsx")
 
 
 included_RCT %>% filter(!is.na(trial_nr)) %>% select(article_id, trial_nr) %>% 

@@ -49,32 +49,39 @@ compare_dataframes <- function(df1, df2) {
   }
 }
 # Example usage:
-df09_oct <- janitor::clean_names(
-  read_xlsx("database/Revised_Data_original_Fariba_2025_10_09_compared.xlsx",col_names = TRUE)[-1, ]) 
-df09_octjrr <- janitor::clean_names(
-  read_xlsx("database/Revised_Data_original_Joana_2025_10_09_compared.xlsx", col_names = TRUE)[-1, ]) 
+dfFA <- janitor::clean_names(
+  read_xlsx("database/Revised_Data_original_Fariba_2025_10_12_compared.xlsx",col_names = TRUE)[-1, ]) 
+dfJRR <- janitor::clean_names(
+  read_xlsx("database/Revised_Data_original_Joana_2025_10_12_compared.xlsx", col_names = TRUE)[-1, ]) 
 
 #columns of interest
-interest_col <- c("article_id", "title", "protocol","doi",
-                  "pilot_feasibility",                                                 
-                  "pooled_analysis",                                                   
-                  "post_hoc_secondary_analysis",
-                  "cci_1st_ep","cci_2nd_ep","cci_expl_ep",
+interest_col <- c("article_id", "title", 
+                 # "cd_cci_reported_in_results",
+                  "primary_outcome_significant",
+                  "statistically_significant_difference_for_cci"  ,
+                  "between_group_difference_of_cci" , 
+                  "mean_or_median_used", 
                   "cci_used_for_ss_calculation_in_paper",                              
                   "specification_of_ss_calculation_in_paper",                          
-                  "study_type_mentioned","type_of_study" ,                                                    
-                  "definition_of_non_inf_margin", "protocol_published","doi_protocol", "cci_1st_ep_in_protocol",                                            
-                  "cci_2nd_ep_in_protocol" ,"cci_exploratory_ep_in_protocol", 
-                  "cci_in_ss_calculation_of_protocol" ,"specification_of_ss_calculation",                                   
-                  "study_type_mentioned_protocol" , "type_of_study_protocol"  , "definition_of_non_inf_margin_protocol" )
+                  "study_type_mentioned",
+                  "type_of_study" ,                                                    
+                  "definition_of_non_inf_margin",
+                  "study_must_be_excluded_e_g_protocol_whose_study_has_been_conducted",
+                  "doi_protocol","publication_year_protocol" ,
+                  "cci_in_ss_calculation_of_protocol" ,
+                  "specification_of_ss_calculation",                          
+                  "study_type_mentioned_protocol",
+                  "type_of_study_protocol" ,                                                    
+                  "definition_of_non_inf_margin_protocol"
+)
 
-control_09_october_FA_jrr <- compare_dataframes(
-  df09_oct[interest_col], 
-  df09_octjrr[interest_col]) 
-#%>% 
- # left_join(
-  #  df09_octjrr %>% select(article_id), 
-  #  by = c("article_id" = "article_id")
- # )
-write_xlsx(control_09_october_FA_jrr, "database/csv_files_R_coding/control_09_october_FA_jrr.xlsx")
+control_12_october_FA_jrr <- compare_dataframes(
+  dfFA[interest_col], 
+ # compared_RCT[interest_col], 
+  dfJRR[interest_col]) %>% 
+ left_join(
+   dfFA %>% select(article_id), 
+    by = c("article_id" = "article_id")
+  )
+write_xlsx(control_12_october_FA_jrr, "database/csv_files_R_coding/control_12_october_FA_jrr.xlsx")
 
