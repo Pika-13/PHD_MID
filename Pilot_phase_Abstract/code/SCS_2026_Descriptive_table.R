@@ -10,7 +10,27 @@ lapply(c("tidyverse", "data.table","utils", "writexl", "readxl",
        character.only = TRUE)
 
 # Open long_RCT_matched_publications_protocols
-RCT_matched_publications_protocols <- read_csv("database/csv_files_R_coding/RCT_matched_publications_protocols_2025_11_02.csv") 
+RCT_publications_2025_10_12 <- read_csv("Pilot_phase_Abstract/database/csv_files_R_coding/RCT_publications_2025_10_12.csv") 
+RCT_publications_2025_10_12%>% 
+  filter(type_of_study_1_ep_sup_non_inf %in% c("Superiority trial", "Non-inferiority trial")) %>% 
+  group_by(type_of_study_1_ep_sup_non_inf, significance_considered) %>% 
+  select(title,type_of_study_1_ep_sup_non_inf, 
+         significance_considered,
+         specification_of_ss_calculation,doi) %>% 
+  flextable()
+RCT_matched_publications_protocols$specification_of_ss_calculation
+
+, between_group_difference_of_cci,significance_considered,type_of_study_1_ep_sup_non_inf,doi) %>% 
+ flextable()
+RCT_matched_publications_protocols$type_of_study_1_ep_sup_non_inf
+  group_by(type_of_study_1_ep_sup_non_inf,
+           significance_considered) %>% 
+  summarise(n=n()) %>%
+  mutate(percent=n/sum(n)*100)
+ 
+#results significant/not according to study design
+#superiority: 37/73  significant or not mentioned
+#non-inferiority: 5/11  significant or not mentioned
 #----------------------------------------------
 #ensure factor variables are factors
 discrete_variables <- c(#"paper_type", 
