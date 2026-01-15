@@ -8,11 +8,11 @@
 lapply(c("tidyverse", "data.table","utils", "writexl", "readxl",
          "ggpubr", "scales", "flextable", "janitor", "labelled", "gtsummary","gt", "dplyr", "markdown"), require,
        character.only = TRUE)
-
+RCT_publications_2026_01_13_supp_outcomes <- read_xlsx("Pilot_phase_Abstract/database/csv_files_R_coding/RCT_publications_2026_01_13_supp_outcomes.xlsx")
 # Open long_RCT_matched_publications_protocols
 RCT_publications_2025_10_12 <- read_csv("Pilot_phase_Abstract/database/csv_files_R_coding/RCT_publications_2025_10_12.csv") 
-RCT_publications_2025_10_12%>% 
-  filter(type_of_study_1_ep_sup_non_inf %in% c("Superiority trial", "Non-inferiority trial")) %>% 
+RCT_publications_2026_01_13_supp_outcomes%>% 
+  filter(meaningful_ss_calculation %in% c("Yes??", "Yes")) %>% 
   group_by(type_of_study_1_ep_sup_non_inf, significance_considered) %>% 
   select(title,type_of_study_1_ep_sup_non_inf, 
          significance_considered,
