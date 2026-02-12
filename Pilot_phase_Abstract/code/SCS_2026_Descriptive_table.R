@@ -8,18 +8,18 @@
 lapply(c("tidyverse", "data.table","utils", "writexl", "readxl",
          "ggpubr", "scales", "flextable", "janitor", "labelled", "gtsummary","gt", "dplyr", "markdown"), require,
        character.only = TRUE)
-RCT_publications_2026_01_13_supp_outcomes <- read_xlsx("Pilot_phase_Abstract/database/csv_files_R_coding/RCT_publications_2026_01_13_supp_outcomes.xlsx")
 # Open long_RCT_matched_publications_protocols
 RCT_publications_2025_10_12 <- read_csv("Pilot_phase_Abstract/database/csv_files_R_coding/RCT_publications_2025_10_12.csv") 
-RCT_publications_2026_01_13_supp_outcomes%>% 
-  filter(meaningful_ss_calculation %in% c("Yes??", "Yes")) %>% 
-  group_by(type_of_study_1_ep_sup_non_inf, significance_considered) %>% 
-  select(title,type_of_study_1_ep_sup_non_inf, 
-         significance_considered,
-         specification_of_ss_calculation,doi) %>% 
-  flextable()
-RCT_matched_publications_protocols$specification_of_ss_calculation
 
+RCT_publications_2026_01_13_supp_outcomes <- read_xlsx("Pilot_phase_Abstract/database/csv_files_R_coding/RCT_publications_2026_01_13_supp_outcomes.xlsx")
+RCT_publications_2026_01_13_supp_outcomes %>%  filter(
+    meaningful_ss_calculation %in% c("Yes??", "Yes")  &
+     significance_considered== "Both statistical and clinical significance")%>% 
+  select(title, meaningful_ss_calculation, type_of_study_sup_non_inf,
+         significance_considered,aim_trial_design,
+         specification_of_ss_calculation,doi) %>% 
+    flextable()
+RCT_publications_2026_01_13_supp_outcomes$aim_trial_design
 , between_group_difference_of_cci,significance_considered,type_of_study_1_ep_sup_non_inf,doi) %>% 
  flextable()
 RCT_matched_publications_protocols$type_of_study_1_ep_sup_non_inf
@@ -27,7 +27,7 @@ RCT_matched_publications_protocols$type_of_study_1_ep_sup_non_inf
            significance_considered) %>% 
   summarise(n=n()) %>%
   mutate(percent=n/sum(n)*100)
- 
+presize::prec_prop(n=NULL, p=0.05, conf.width = 0.07)
 #results significant/not according to study design
 #superiority: 37/73  significant or not mentioned
 #non-inferiority: 5/11  significant or not mentioned
