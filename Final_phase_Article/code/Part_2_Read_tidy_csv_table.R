@@ -137,8 +137,8 @@ database_v1 <- database_v0 %>%
                            condordance_primary_endpoint==1 &
                           condordance_sample_size==1 &
                            RCT_clinical_discussion_interpretation==1 ~ 1,
-                         condordance_aim==999 &
-                           condordance_design_aim==1 & 
+                         condordance_aim==1 &
+                           condordance_design_aim==999 & 
                            condordance_primary_endpoint==1 &
                            condordance_sample_size==1 &
                            RCT_clinical_discussion_interpretation==1 ~ 1,
